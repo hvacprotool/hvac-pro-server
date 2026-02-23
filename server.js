@@ -33,9 +33,13 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
 
     res.json({ text: transcription.text });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Transcription failed" });
-  }
+  console.error("TRANSCRIBE ERROR:", err);
+
+  // Send back the real error message (super helpful for debugging)
+  res.status(500).json({
+    error: err?.message || "Transcription failed",
+  });
+}
 });
 
 const PORT = process.env.PORT || 3001;
