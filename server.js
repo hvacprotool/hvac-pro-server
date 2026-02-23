@@ -3,6 +3,7 @@ import cors from "cors";
 import multer from "multer";
 import fs from "fs";
 import OpenAI from "openai";
+import { toFile } from "openai/uploads";
 import "dotenv/config";
 
 const app = express();
@@ -24,10 +25,15 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
       return res.status(400).json({ error: "No audio file uploaded" });
     }
 
-    const transcription = await client.audio.transcriptions.create({
-      file: fs.createReadStream(req.file.path),
-      model: "gpt-4o-mini-transcribe",
-    });
+    const fileForOpenAI = await toFile(
+  fs.createReadStream(req.file.path),
+  req.file.originalname || "audio.m4a"
+);
+
+const transcription = await client.audio.transcriptions.create({
+  file: fileForOpenAI,
+  model: "gpt-4o-mini-transcribe",
+});
 
     fs.unlink(req.file.path, () => {});
 
