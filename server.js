@@ -21,21 +21,22 @@ app.get("/health", (req, res) => {
 });
 app.post("/ask", async (req, res) => {
   try {
-    const { message } = req.body || {};
-    if (!message || typeof message !== "string") {
-      return res.status(400).json({ error: "Missing 'message' string" });
-    }
+    const { messages } = req.body || {};
+
+if (!Array.isArray(messages)) {
+  return res.status(400).json({ error: "Missing messages array" });
+}
 
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        {
-          role: "system",
-          content:
-            "You are an expert HVAC service technician assistant. Give practical troubleshooting steps for field techs. Ask 1-2 key clarifying questions if needed. Use short bullet points. Include safety notes when relevant. Do not invent pressures/temps; if needed, ask for measurements.",
-        },
-        { role: "user", content: message },
-      ],
+  {
+    role: "system",
+    content:
+      "You are an expert HVAC service technician assistant. Give practical troubleshooting steps for field techs. Ask 1-2 key clarifying questions if needed. Use short bullet points. Include safety notes when relevant. Do not invent pressures/temps; if needed, ask for measurements.",
+  },
+  ...messages,
+],
       temperature: 0.2,
     });
 
