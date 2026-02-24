@@ -77,21 +77,16 @@ app.post("/vision", uploadImage.single("image"), async (req, res) => {
     });
 
     // Clean up uploaded file
-    
+ fs.unlink(req.file.path, () => {});
+
+const reply = completion.choices?.[0]?.message?.content ?? "";
+res.json({ reply });   
   } catch (err) {
     console.error("VISION ERROR:", err);
     res.status(500).json({ error: err?.message || "Vision failed" });
   }
 });
 
-    fs.unlink(req.file.path, () => {});
-    const reply = completion.choices?.[0]?.message?.content ?? "";
-    res.json({ reply });
-  } catch (err) {
-    console.error("VISION ERROR:", err);
-    res.status(500).json({ error: err?.message || "Vision failed" });
-  }
-});
 app.post("/transcribe", upload.single("audio"), async (req, res) => {
   try {
     if (!req.file) {
