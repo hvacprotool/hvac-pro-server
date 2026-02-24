@@ -52,10 +52,10 @@ app.post("/vision", uploadImage.single("image"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No image uploaded" });
 
-    const imageFile = await toFile(
-      fs.createReadStream(req.file.path),
-      req.file.originalname || "photo.jpg"
-    );
+    // Read image from disk and convert to base64 data URL
+    const mime = req.file.mimetype || "image/jpeg";
+    const b64 = fs.readFileSync(req.file.path, { encoding: "base64" });
+    const dataUrl = `data:${mime};base64,${b64}`;
 
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
@@ -69,12 +69,20 @@ app.post("/vision", uploadImage.single("image"), async (req, res) => {
           role: "user",
           content: [
             { type: "text", text: "Analyze this HVAC photo and give troubleshooting steps." },
-            { type: "image_file", image_file: imageFile },
+            { type: "image_url", image_url: { url: dataUrl } },
           ],
         },
       ],
       temperature: 0.2,
     });
+
+    // Clean up uploaded file
+    
+  } catch (err) {
+    console.error("VISION ERROR:", err);
+    res.status(500).json({ error: err?.message || "Vision failed" });
+  }
+});
 
     fs.unlink(req.file.path, () => {});
     const reply = completion.choices?.[0]?.message?.content ?? "";
