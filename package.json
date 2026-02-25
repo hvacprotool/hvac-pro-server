@@ -4,18 +4,21 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "start": "node server.js"
-},
+    "start": "node server.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@prisma/client": "^6.15.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "multer": "^2.0.2",
     "openai": "^6.22.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "prisma": "^6.15.0"
+  }
 }
