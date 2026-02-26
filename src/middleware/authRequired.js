@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 
 export default function authRequired(req, res, next) {
   try {
-    console.log("AUTH MIDDLEWARE HIT:", req.method, req.path);
     const header = req.headers.authorization || "";
     const [type, token] = header.split(" ");
 
