@@ -1,10 +1,13 @@
 import express from "express";
 import cors from "cors";
 import multer from "multer";
+import authRoutes from "./src/routes/auth.js";
 import fs from "fs";
 import OpenAI from "openai";
 import { toFile } from "openai/uploads";
 import "dotenv/config";
+
+import authRequired from "./src/middleware/authRequired.js";
 
 const app = express();
 app.use(cors());
@@ -12,6 +15,7 @@ app.use(express.json({ limit: "1mb" }));
 
 const upload = multer({ dest: "uploads/" });
 const uploadImage = multer({ dest: "uploads/" });
+app.use("/auth", authRoutes);
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -20,7 +24,7 @@ const client = new OpenAI({
 app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
-app.post("/ask", async (req, res) => {
+app.post("/ask", authRequired, async (req, res) => {
   try {
     const { messages } = req.body || {};
 
@@ -48,7 +52,7 @@ if (!Array.isArray(messages)) {
     res.status(500).json({ error: err?.message || "Chat failed" });
   }
 });
-app.post("/vision", uploadImage.single("image"), async (req, res) => {
+app.post("/vision", authRequired, uploadImage.single("image"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No image uploaded" });
 
@@ -87,7 +91,7 @@ res.json({ reply });
   }
 });
 
-app.post("/transcribe", upload.single("audio"), async (req, res) => {
+app.post("/transcribe", authRequired, upload.single("audio"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No audio file uploaded" });
