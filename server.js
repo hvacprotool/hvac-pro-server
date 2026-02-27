@@ -7,6 +7,7 @@ import meRoutes from "./src/routes/me.js";
 import OpenAI from "openai";
 import { toFile } from "openai/uploads";
 import "dotenv/config";
+import prisma from "./src/prisma.js";
 
 import authRequired from "./src/middleware/authRequired.js";
 import requireEntitlement from "./src/middleware/requireEntitlement.js";
@@ -27,6 +28,32 @@ const client = new OpenAI({
 app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
+
+app.post("/admin/grant-entitlement", async (req, res) => {
+  try {
+    const key = req.headers["x-admin-key"];
+    if (!process.env.ADMIN_KEY || key !== process.env.ADMIN_KEY) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { email, entitlement } = req.body || {};
+    if (!email || !entitlement) {
+      return res.status(400).json({ error: "Missing email or entitlement" });
+    }
+
+    const user = await prisma.user.update({
+      where: { email },
+      data: { entitlements: { push: entitlement } },
+      select: { email: true, entitlements: true },
+    });
+
+    return res.json({ ok: true, user });
+  } catch (err) {
+    console.error("grant-entitlement error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.post("/ask", authRequired, requireEntitlement("hvac_assistant"), async (req, res) => {
   try {
     const { messages } = req.body || {};
