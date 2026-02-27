@@ -14,7 +14,14 @@ export default function authRequired(req, res, next) {
     }
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { userId: payload.userId, email: payload.email };
+
+    const userId = payload.userId || payload.id || payload.sub;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    req.userId = userId;
+    req.user = { id: userId, email: payload.email };
 
     return next();
   } catch (err) {

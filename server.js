@@ -3,15 +3,18 @@ import cors from "cors";
 import multer from "multer";
 import authRoutes from "./src/routes/auth.js";
 import fs from "fs";
+import meRoutes from "./src/routes/me.js";
 import OpenAI from "openai";
 import { toFile } from "openai/uploads";
 import "dotenv/config";
 
 import authRequired from "./src/middleware/authRequired.js";
+import requireEntitlement from "./src/middleware/requireEntitlement.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
+app.use(meRoutes);
 
 const upload = multer({ dest: "uploads/" });
 const uploadImage = multer({ dest: "uploads/" });
@@ -24,7 +27,7 @@ const client = new OpenAI({
 app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
-app.post("/ask", authRequired, async (req, res) => {
+app.post("/ask", authRequired, requireEntitlement("hvac_assistant"), async (req, res) => {
   try {
     const { messages } = req.body || {};
 
